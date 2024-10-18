@@ -22,8 +22,8 @@ int main() {
     capture_packets("eth0");
 
     // Step 5: Extract flow features (from real-time packet capture)
-    std::vector<Packet> flow_packets;  // Placeholder for captured packets
-    FlowFeatures features = extract_features(flow_packets);
+    std::vector<FlowData> flow_packets;  // Placeholder for captured packets
+    FlowFeatures features = extract_features_from_dataset(flow_packets);
 
     // Step 6: Normalize extracted features
     std::vector<double> feature_values = { 

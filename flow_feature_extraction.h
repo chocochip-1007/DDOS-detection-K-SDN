@@ -23,6 +23,6 @@ struct FlowData {
 FlowFeatures extract_features(const std::vector<Packet>& flow_packets);
 
 // Function to extract features directly from dataset rows
-FlowFeatures extract_features_from_dataset(const FlowData& flow);
+FlowFeatures extract_features_from_dataset(const std::vector<FlowData>& flow_data);
 
 #endif
