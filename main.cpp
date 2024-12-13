@@ -5,12 +5,12 @@
 #include "normalization.h"
 #include "classification.h"
 #include "data_storage.h"
-#include "dataset_loader.h" 
+#include "sdn_dataset_loader.h" 
 #include <iostream>
 
 int main() {
     // Step 1: Load CICDDoS2019 dataset for training
-    std::vector<FlowData> dataset = load_dataset("CICDDoS2019.csv");
+    std::vector<FlowData> dataset = load_sdn_dataset("ISCX_SDN.csv");
 
     // Step 2: Normalize the dataset
     normalize_dataset(dataset);
@@ -22,14 +22,14 @@ int main() {
     capture_packets("eth0");
 
     // Step 5: Extract flow features (from real-time packet capture)
-    std::vector<FlowData> flow_packets;  // Placeholder for captured packets
-    FlowFeatures features = extract_features_from_dataset(flow_packets);
+    FlowFeatures features = extract_features_from_dataset(dataset);
 
     // Step 6: Normalize extracted features
+    double avg_packet_size = (features.max_packet_len+features.min_packet_len)/2;
     std::vector<double> feature_values = { 
     static_cast<double>(features.max_packet_len), 
     static_cast<double>(features.min_packet_len), 
-    features.avg_packet_size  // No need to cast this if it's already double
+    static_cast<double>(avg_packet_size)  // No need to cast this if it's already double
     };
     normalize(feature_values);
 

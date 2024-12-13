@@ -1,50 +1,67 @@
-// flow_feature_extraction.cpp
-
 #include "flow_feature_extraction.h"
-#include <iostream>
-#include <vector>
-
-FlowFeatures extract_features(const std::vector<Packet>& flow_packets) {
-    FlowFeatures features;
-    
-    // Replace this logic with real-time extraction logic from packets
-    features.max_packet_len = 1000;  // Example placeholder logic
-    features.min_packet_len = 40;
-    features.avg_packet_size = 512.5;
-    
-    return features;
-}
+#include <cmath>
+#include <numeric>
+#include <limits>
 
 FlowFeatures extract_features_from_dataset(const std::vector<FlowData>& flow_data) {
-    FlowFeatures features;
+    FlowFeatures features = {};
 
-    // Initialize min and max values
-    features.max_packet_len = 0;
-    features.min_packet_len = INT_MAX;  // Initialize to a very high value
-    double total_packet_size = 0.0;
+    // Initialize default values
+    features.max_packet_len = std::numeric_limits<int>::min();
+    features.min_packet_len = std::numeric_limits<int>::max();
+    features.mean_packet_len = 0.0;
+    features.fwd_packet_len_mean = 0.0;
+    features.bwd_packet_len_mean = 0.0;
+    features.flow_duration = 0;
+    features.total_fwd_packets = 0;
+    features.total_bwd_packets = 0;
+    features.total_fwd_bytes = 0;
+    features.total_bwd_bytes = 0;
+    features.flow_byte_rate = 0.0;
+    features.flow_packet_rate = 0.0;
+    features.ack_packet_count = 0;
 
-    // Loop through the vector to calculate the max, min, and total average packet size
+    // Check if data is empty
+    if (flow_data.empty()) {
+        return features;
+    }
+
+    // Accumulators for computing means
+    double total_packet_len = 0.0;
+    double total_fwd_packet_len = 0.0;
+    double total_bwd_packet_len = 0.0;
+
     for (const auto& flow : flow_data) {
-        // Find the maximum packet length
-        if (flow.max_packet_len > features.max_packet_len) {
-            features.max_packet_len = flow.max_packet_len;
-        }
+        // Update max and min packet lengths
+        features.max_packet_len = std::max(features.max_packet_len, flow.features.max_packet_len);
+        features.min_packet_len = std::min(features.min_packet_len, flow.features.min_packet_len);
 
-        // Find the minimum packet length
-        if (flow.min_packet_len < features.min_packet_len) {
-            features.min_packet_len = flow.min_packet_len;
-        }
+        // Accumulate for mean calculations
+        total_packet_len += flow.features.mean_packet_len;
+        total_fwd_packet_len += flow.features.fwd_packet_len_mean;
+        total_bwd_packet_len += flow.features.bwd_packet_len_mean;
 
-        // Accumulate total packet size for calculating average
-        total_packet_size += flow.avg_packet_size;
+        // Update totals
+        features.total_fwd_packets += flow.features.total_fwd_packets;
+        features.total_bwd_packets += flow.features.total_bwd_packets;
+        features.total_fwd_bytes += flow.features.total_fwd_bytes;
+        features.total_bwd_bytes += flow.features.total_bwd_bytes;
+
+        // Accumulate flow duration and ACK packet count
+        features.flow_duration += flow.features.flow_duration;
+        features.ack_packet_count += flow.features.ack_packet_count;
     }
 
-    // Calculate average packet size
-    if (!flow_data.empty()) {
-        features.avg_packet_size = total_packet_size / flow_data.size();
-    } else {
-        features.avg_packet_size = 0;  // Avoid division by zero
-    }
+    // Compute means
+    features.mean_packet_len = total_packet_len / flow_data.size();
+    features.fwd_packet_len_mean = total_fwd_packet_len / flow_data.size();
+    features.bwd_packet_len_mean = total_bwd_packet_len / flow_data.size();
+
+    // Compute flow-level rates
+    features.flow_byte_rate = static_cast<double>(features.total_fwd_bytes + features.total_bwd_bytes) /
+                              static_cast<double>(features.flow_duration);
+    features.flow_packet_rate = static_cast<double>(features.total_fwd_packets + features.total_bwd_packets) /
+                                static_cast<double>(features.flow_duration);
 
     return features;
 }

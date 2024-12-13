@@ -1,4 +1,4 @@
-// dataset_loader.h
+// sdn_dataset_loader.h
 #ifndef DATASET_LOADER_H
 #define DATASET_LOADER_H
 
@@ -7,6 +7,6 @@
 #include "flow_feature_extraction.h"
 
 // Function to load the dataset from a CSV file
-std::vector<FlowData> load_dataset(const std::string& filename);
+std::vector<FlowData> load_sdn_dataset(const std::string& filename);
 
 #endif
